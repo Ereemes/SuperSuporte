@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Store {
+  id        Int      @id @default(autoincrement())
+  codigo    String   @unique
+  nome      String
+  razaoSocial String?
+  cnpj      String?
+  status    String   @default("Aberta")
+  unidadeNegocio String?
+  grupoFinanceiro String?
+
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  uf          String?
+  cep         String?
+  regional    String?
+  diretor     String?
+
+  telefone     String?
+  whatsapp     String?
+  emailLoja    String?
+  emailGerente String?
+
+  horaAbertura   String?
+  horaFechamento String?
+
+  ip              String?
+  linkInternet    String?
+  operadora       String?
+  tipoConexao     String?
+  qtdePdvs        Int?
+  servidorLocal   String?
+  modeloEquipamento String?
+
+  versaoMegastore  String?
+  versaoRetaguarda String?
+  versaoFrente     String?
+  ambiente         String?
+  homologacao      String?
+
+  observacoes      String?
+  ultimaAtualizacao String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  favorites Favorite[]
+}
+
+model Favorite {
+  id      Int    @id @default(autoincrement())
+  userId  String @default("default")
+  storeId Int
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  @@unique([userId, storeId])
+}

@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
+  --color-brand-hi: var(--brand-hi);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-wash: var(--brand-wash);
+}
+
+:root {
+  --paper: #FAFAF7;
+  --paper-hi: #FFFFFF;
+  --paper-sub: #F3F1EA;
+  --ink: #111111;
+  --ink-soft: #3A3A3A;
+  --muted: #8A8880;
+  --muted-2: #B5B2A8;
+  --rule: #E8E5DE;
+  --rule-hi: #D6D2C6;
+  --brand: #E85E42;
+  --brand-hi: #F0725A;
+  --brand-deep: #B34530;
+  --brand-wash: #FBEAE4;
+  --brand-ring: rgba(232,94,66,.22);
+  --ok: #4A7A3A;
+  --ok-soft: #E4EFD9;
+  --warn: #B87614;
+  --warn-soft: #F5E7CB;
+  --alert: #A6392B;
+  --alert-soft: #F1D8D2;
+}
+
+[data-theme="dark"] {
+  --paper: #0F0D0E;
+  --paper-hi: #18161A;
+  --paper-sub: #141215;
+  --ink: #F0EEEA;
+  --ink-soft: #C9C6BF;
+  --muted: #8A857A;
+  --muted-2: #5A554E;
+  --rule: #26232A;
+  --rule-hi: #36323C;
+  --brand: #F26A50;
+  --brand-hi: #FF7A60;
+  --brand-deep: #FF8A70;
+  --brand-wash: rgba(242,106,80,.14);
+  --brand-ring: rgba(242,106,80,.32);
+  --ok: #7BC488;
+  --ok-soft: rgba(123,196,136,.14);
+  --warn: #E8A957;
+  --warn-soft: rgba(232,169,87,.14);
+  --alert: #E76B60;
+  --alert-soft: rgba(231,107,96,.14);
+}
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+
+input::placeholder {
+  color: var(--muted);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
