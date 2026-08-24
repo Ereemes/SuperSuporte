@@ -96,7 +96,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     email: user.email,
     profileType: user.profile.type as ProfileType,
     profileLabel: user.profile.label,
-    permissions: user.profile.permissions.map((p) => p.permission as Permission),
+    permissions: user.profile.permissions.map((p: { permission: string }) => p.permission as Permission),
     initials: makeInitials(user.name),
   };
 }
