@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
     fornecedor: searchParams.get("fornecedor") || undefined,
     taxa: searchParams.get("taxa") === "true" || undefined,
     favoritesOnly: searchParams.get("favorites") === "true",
-    page: parseInt(searchParams.get("page") || "1", 10),
-    limit: parseInt(searchParams.get("limit") || "20", 10),
+    page: Math.max(1, parseInt(searchParams.get("page") || "1", 10)),
+    limit: Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10))),
     userId: user.id,
   });
 

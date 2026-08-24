@@ -41,6 +41,16 @@ const PROFILES = [
   },
 ];
 
+function getRequiredEnv(key: string): string {
+  const value = process.env[key];
+  if (!value || value.length < 8) {
+    throw new Error(
+      `${key} nao definida ou muito curta (minimo 8 caracteres). Defina no .env antes de rodar o seed.`
+    );
+  }
+  return value;
+}
+
 async function main() {
   for (const p of PROFILES) {
     const profile = await prisma.profile.upsert({
@@ -59,24 +69,30 @@ async function main() {
   }
 
   const seedUsers = [
-    { name: "Administrador TI", email: "admin@grupooscar.com.br", password: "admin123", profileType: "admin" },
-    { name: "Operador TI", email: "operador@grupooscar.com.br", password: "operador123", profileType: "operador" },
-    { name: "Consulta TI", email: "consulta@grupooscar.com.br", password: "consulta123", profileType: "consulta" },
+    { name: "Administrador TI", email: "admin@grupooscar.com.br", envKey: "SEED_PASSWORD_ADMIN", profileType: "admin" },
+    { name: "Operador TI", email: "operador@grupooscar.com.br", envKey: "SEED_PASSWORD_OPERADOR", profileType: "operador" },
+    { name: "Consulta TI", email: "consulta@grupooscar.com.br", envKey: "SEED_PASSWORD_CONSULTA", profileType: "consulta" },
   ];
 
   for (const u of seedUsers) {
+    const password = getRequiredEnv(u.envKey);
     const profile = await prisma.profile.findUnique({ where: { type: u.profileType } });
     if (!profile) throw new Error(`Profile ${u.profileType} not found after seed`);
 
     const existing = await prisma.user.findUnique({ where: { email: u.email } });
     if (!existing) {
-      const hash = await bcrypt.hash(u.password, 10);
+      const hash = await bcrypt.hash(password, 10);
       await prisma.user.create({
         data: { name: u.name, email: u.email, password: hash, profileId: profile.id },
       });
-      console.log(`User created: ${u.email} / ${u.password} (${u.profileType})`);
+      console.log(`User created: ${u.email} (${u.profileType})`);
     } else {
-      console.log(`User ${u.email} already exists, skipping.`);
+      const hash = await bcrypt.hash(password, 10);
+      await prisma.user.update({
+        where: { email: u.email },
+        data: { password: hash },
+      });
+      console.log(`User ${u.email} password updated (${u.profileType})`);
     }
   }
 
