@@ -59,9 +59,57 @@ model Store {
 
 model Favorite {
   id      Int    @id @default(autoincrement())
-  userId  String @default("default")
+  userId  String
   storeId Int
   store   Store  @relation(fields: [storeId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, storeId])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  profileId String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile    @relation(fields: [profileId], references: [id])
+  auditLogs AuditLog[]
+  favorites Favorite[]
+}
+
+model Profile {
+  id    String @id @default(uuid())
+  type  String @unique
+  label String
+
+  users       User[]
+  permissions ProfilePermission[]
+}
+
+model ProfilePermission {
+  id         String @id @default(uuid())
+  profileId  String
+  permission String
+
+  profile Profile @relation(fields: [profileId], references: [id])
+
+  @@unique([profileId, permission])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  target     String
+  details    String?
+  topdeskRef String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

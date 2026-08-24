@@ -36,6 +36,8 @@ export interface Store {
   homologacao: string | null;
   observacoes: string | null;
   ultimaAtualizacao: string | null;
+  fornecedorAtendimento: "TI Partner" | "C4" | null;
+  possuiTaxaDeslocamento: boolean;
   isFavorite: boolean;
 }
 

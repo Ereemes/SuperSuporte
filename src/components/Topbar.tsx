@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 export function Topbar() {
   const [dark, setDark] = useState(false);
+  const { user } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     if (saved === "dark") {
-      setDark(true);
       document.documentElement.setAttribute("data-theme", "dark");
+      setDark(true);
+    } else {
+      setDark(document.documentElement.getAttribute("data-theme") === "dark");
     }
   }, []);
 
@@ -24,6 +30,12 @@ export function Topbar() {
       localStorage.setItem("theme", "light");
     }
   }
+
+  const activeModule = pathname?.startsWith("/mudancas")
+    ? "Mudancas"
+    : pathname?.startsWith("/admin")
+      ? "Admin"
+      : "Lojas";
 
   return (
     <header
@@ -43,7 +55,7 @@ export function Topbar() {
       </div>
 
       <span className="text-[13px] hidden sm:block" style={{ color: "var(--muted)" }}>
-        Grupo Oscar · TI · <strong style={{ color: "var(--ink)" }}>Lojas</strong>
+        Grupo Oscar · TI · <strong style={{ color: "var(--ink)" }}>{activeModule}</strong>
       </span>
 
       <div className="flex items-center gap-2.5">
@@ -69,28 +81,30 @@ export function Topbar() {
           )}
         </button>
 
-        <div
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-full"
-          style={{
-            background: "var(--paper-hi)",
-            border: "1px solid var(--rule)",
-          }}
-        >
+        {user && (
           <div
-            className="w-7 h-7 rounded-full grid place-items-center text-xs font-bold"
-            style={{ background: "var(--ink)", color: "var(--paper)" }}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-full"
+            style={{
+              background: "var(--paper-hi)",
+              border: "1px solid var(--rule)",
+            }}
           >
-            S
-          </div>
-          <div className="hidden sm:block">
-            <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
-              Sergio Vinicius
+            <div
+              className="w-7 h-7 rounded-full grid place-items-center text-xs font-bold"
+              style={{ background: "var(--ink)", color: "var(--paper)" }}
+            >
+              {user.initials}
             </div>
-            <div className="text-[11px]" style={{ color: "var(--muted)" }}>
-              Analista N1 · TI
+            <div className="hidden sm:block">
+              <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                {user.name}
+              </div>
+              <div className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {user.profileLabel} · TI
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

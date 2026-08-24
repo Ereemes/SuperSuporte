@@ -1,85 +1,86 @@
 import { PrismaClient } from "@prisma/client";
-import storesRaw from "./stores_data.json";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+const url = dbUrl.replace("file:", "");
+const adapter = new PrismaBetterSqlite3({ url });
+const prisma = new PrismaClient({ adapter });
 
-function parseCode(raw: string | null): string {
-  if (!raw) return "000";
-  return String(raw).padStart(3, "0");
-}
-
-function parseName(nomeFantasia: string | null): string {
-  if (!nomeFantasia) return "";
-  const parts = nomeFantasia.split(" - ");
-  return parts.length > 1 ? parts.slice(1).join(" - ").trim() : nomeFantasia.trim();
-}
-
-function parseTime(raw: string | null): string | null {
-  if (!raw) return null;
-  const s = String(raw);
-  if (s.includes(":")) return s.substring(0, 5);
-  return s;
-}
-
-function parseInt_(raw: string | null): number | null {
-  if (!raw) return null;
-  const n = parseInt(raw, 10);
-  return isNaN(n) ? null : n;
-}
+const PROFILES = [
+  {
+    type: "admin",
+    label: "Administrador",
+    permissions: [
+      "lojas.visualizar",
+      "mudancas.visualizar",
+      "mudancas.visualizar_detalhes",
+      "mudancas.executar",
+      "mudancas.cancelar",
+      "mudancas.reprocessar",
+      "mudancas.administrar",
+      "admin.usuarios",
+      "admin.perfis",
+    ],
+  },
+  {
+    type: "operador",
+    label: "Operador",
+    permissions: [
+      "lojas.visualizar",
+      "mudancas.visualizar",
+      "mudancas.visualizar_detalhes",
+      "mudancas.executar",
+      "mudancas.cancelar",
+    ],
+  },
+  {
+    type: "consulta",
+    label: "Consulta",
+    permissions: ["lojas.visualizar"],
+  },
+];
 
 async function main() {
-  console.log("Seeding database...");
-  await prisma.store.deleteMany();
-  await prisma.favorite.deleteMany();
-
-  for (const s of storesRaw as Record<string, string | null>[]) {
-    const codigo = parseCode(s["Código Loja"]);
-    const nome = parseName(s["Nome Fantasia"]);
-
-    await prisma.store.create({
-      data: {
-        codigo,
-        nome,
-        razaoSocial: s["Razão Social"] || null,
-        cnpj: s["CNPJ"] || null,
-        status: s["Status"] || "Aberta",
-        unidadeNegocio: s["Unidade de Negócio"] || null,
-        grupoFinanceiro: s["Grupo Financeiro"] || null,
-        logradouro: s["Logradouro"] || null,
-        numero: s["Número"] || null,
-        complemento: s["Complemento (Endereço Lojas)"] || null,
-        bairro: s["Bairro"] || null,
-        cidade: s["Cidade"] || null,
-        uf: s["UF"] || null,
-        cep: s["CEP"] || null,
-        regional: s["Regional"] || null,
-        diretor: s["Diretor"] || null,
-        telefone: s["Telefone Loja"] || null,
-        whatsapp: s["WhatsApp"] || null,
-        emailLoja: s["E-mail Loja"] || null,
-        emailGerente: s["E-mail Gerente"] || null,
-        horaAbertura: parseTime(s["Hora Abertura"]),
-        horaFechamento: parseTime(s["Hora Fechamento"]),
-        ip: s["IP"] || null,
-        linkInternet: s["Link de Internet"] || null,
-        operadora: s["Operadora"] || null,
-        tipoConexao: s["Tipo de Conexão"] || null,
-        qtdePdvs: parseInt_(s["Qtde PDVs"]),
-        servidorLocal: s["Servidor Local (S/N)"] || null,
-        modeloEquipamento: s["Modelo de Equipamento"] || null,
-        versaoMegastore: s["Versão MegaStore"] || null,
-        versaoRetaguarda: s["Versão Retaguarda"] || null,
-        versaoFrente: s["Versão Frente"] || null,
-        ambiente: s["Ambiente (Produção/Beta)"] || null,
-        homologacao: s["Homologação"] || null,
-        observacoes: s["Observações"] || null,
-        ultimaAtualizacao: s["Última Atualização"] || null,
-      },
+  for (const p of PROFILES) {
+    const profile = await prisma.profile.upsert({
+      where: { type: p.type },
+      update: { label: p.label },
+      create: { type: p.type, label: p.label },
     });
+
+    for (const perm of p.permissions) {
+      await prisma.profilePermission.upsert({
+        where: { profileId_permission: { profileId: profile.id, permission: perm } },
+        update: {},
+        create: { profileId: profile.id, permission: perm },
+      });
+    }
   }
 
-  const count = await prisma.store.count();
-  console.log(`Seeded ${count} stores.`);
+  const seedUsers = [
+    { name: "Administrador TI", email: "admin@grupooscar.com.br", password: "admin123", profileType: "admin" },
+    { name: "Operador TI", email: "operador@grupooscar.com.br", password: "operador123", profileType: "operador" },
+    { name: "Consulta TI", email: "consulta@grupooscar.com.br", password: "consulta123", profileType: "consulta" },
+  ];
+
+  for (const u of seedUsers) {
+    const profile = await prisma.profile.findUnique({ where: { type: u.profileType } });
+    if (!profile) throw new Error(`Profile ${u.profileType} not found after seed`);
+
+    const existing = await prisma.user.findUnique({ where: { email: u.email } });
+    if (!existing) {
+      const hash = await bcrypt.hash(u.password, 10);
+      await prisma.user.create({
+        data: { name: u.name, email: u.email, password: hash, profileId: profile.id },
+      });
+      console.log(`User created: ${u.email} / ${u.password} (${u.profileType})`);
+    } else {
+      console.log(`User ${u.email} already exists, skipping.`);
+    }
+  }
+
+  console.log("Seed complete.");
 }
 
 main()
