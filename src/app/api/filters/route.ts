@@ -10,5 +10,5 @@ export async function GET() {
     throw e;
   }
 
-  return NextResponse.json(getFilterOptions());
+  return NextResponse.json(await getFilterOptions());
 }

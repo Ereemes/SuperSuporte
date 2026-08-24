@@ -23,6 +23,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "storeId deve ser um inteiro positivo" }, { status: 400 });
   }
 
-  const favorited = toggleFavorite(storeId, user.id);
+  const favorited = await toggleFavorite(storeId, user.id);
   return NextResponse.json({ favorited });
 }

@@ -15,7 +15,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const store = getStore(parseInt(id, 10), user.id);
+  const store = await getStore(parseInt(id, 10), user.id);
 
   if (!store) {
     return NextResponse.json({ error: "Loja não encontrada" }, { status: 404 });

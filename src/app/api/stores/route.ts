@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
 
-  const result = getStores({
+  const result = await getStores({
     q: searchParams.get("q") || undefined,
     status: searchParams.get("status") || undefined,
     uf: searchParams.get("uf") || undefined,
