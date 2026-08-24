@@ -44,25 +44,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "E-mail e senha obrigatorios" }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: { profile: true },
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { profile: true },
+    });
 
-  if (!user || !user.active) {
-    await bcrypt.compare(password, DUMMY_HASH);
-    return NextResponse.json({ error: "E-mail ou senha invalidos" }, { status: 401 });
+    if (!user || !user.active) {
+      await bcrypt.compare(password, DUMMY_HASH);
+      return NextResponse.json({ error: "E-mail ou senha invalidos" }, { status: 401 });
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return NextResponse.json({ error: "E-mail ou senha invalidos" }, { status: 401 });
+    }
+
+    const token = await createToken(user.id);
+    await setAuthCookie(token);
+
+    await auditLog(user.id, "login", "auth", null, ip);
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[login] erro interno:", err);
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
-    return NextResponse.json({ error: "E-mail ou senha invalidos" }, { status: 401 });
-  }
-
-  const token = await createToken(user.id);
-  await setAuthCookie(token);
-
-  await auditLog(user.id, "login", "auth", null, ip);
-
-  return NextResponse.json({ ok: true });
 }

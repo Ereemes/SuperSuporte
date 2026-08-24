@@ -51,7 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
+    let data: { ok?: boolean; error?: string };
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
 
     if (!res.ok) {
       return { ok: false, error: data.error || "Erro ao autenticar" };
